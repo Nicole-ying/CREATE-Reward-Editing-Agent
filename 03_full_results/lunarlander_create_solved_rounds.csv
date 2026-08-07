@@ -1,0 +1,6 @@
+lineage_index,condition,first_solved_round,best_search_fitness,test_fitness,notes
+0,CREATE,8,TBD,TBD,Main paper reports CREATE solved five lineages at rounds 8,10,2,4,3.
+1,CREATE,10,TBD,TBD,Fill exact best and test fitness from logs.
+2,CREATE,2,TBD,TBD,Fill exact best and test fitness from logs.
+3,CREATE,4,TBD,TBD,Fill exact best and test fitness from logs.
+4,CREATE,3,TBD,TBD,Fill exact best and test fitness from logs.
