@@ -1,0 +1,3 @@
+environment,condition,lineage_index,round,reward_version,search_fitness,best_so_far_fitness,solved,native_eval_episodes,episode_length_mean,termination_summary,selected_for_test,test_fitness,run_id,notes
+LunarLander-v3,CREATE,TBD,TBD,TBD,TBD,TBD,TBD,20,TBD,TBD,TBD,TBD,TBD,Fill from raw experiment logs.
+BipedalWalker-v3,CREATE,TBD,TBD,TBD,TBD,TBD,TBD,20,TBD,TBD,TBD,TBD,TBD,Fill from raw experiment logs.
