@@ -1,0 +1,6 @@
+condition,budget,best_fitness_mean,best_fitness_std,solved
+Independent-10,10,-0.74,114.40,0/5
+Stateless revision,10,44.00,65.90,0/5
+CREATE w/o evidence enrichment,10,134.97,148.43,2/5
+CREATE w/o hierarchical editing,10,114.21,46.31,0/5
+CREATE,10,228.98,16.54,5/5
