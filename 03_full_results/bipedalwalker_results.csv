@@ -1,0 +1,8 @@
+seed,initial_fitness,first_version_ge_300,best_fitness,test_fitness
+0,270.7,v2,320.0,TBD
+1,280.5,v2,313.7,TBD
+2,272.1,v2,307.9,TBD
+3,290.0,v2,311.1,TBD
+4,103.0,v3,304.9,TBD
+mean,243.26,2.2 versions,311.54,310.82
+std,70.45,TBD,5.17,5.03
