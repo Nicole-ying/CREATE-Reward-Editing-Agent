@@ -1,0 +1,32 @@
+paper: CREATE
+review_stage_note: Do not expose API keys, account identifiers, usernames, or non-anonymous service endpoints.
+
+lunarlander:
+  llm_backbone: DeepSeek V4 Pro
+  used_for_conditions:
+    - Independent-10
+    - Stateless iterative revision
+    - CREATE without evidence enrichment
+    - CREATE without hierarchical editing
+    - CREATE
+  temperature: TBD
+  top_p: TBD
+  max_output_tokens: TBD
+  max_context_tokens: TBD
+  retry_limit: TBD
+  invalid_code_retry_policy: TBD
+  prompt_version_hashes: TBD
+
+bipedalwalker:
+  llm_backbone: TBD
+  temperature: TBD
+  top_p: TBD
+  max_output_tokens: TBD
+  max_context_tokens: TBD
+  retry_limit: TBD
+  invalid_code_retry_policy: TBD
+
+logging:
+  store_raw_prompts: true
+  store_llm_outputs: true
+  anonymize_before_review_submission: true
