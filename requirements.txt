@@ -1,0 +1,11 @@
+# Fill exact versions from the experiment environment before submission.
+# Keep this file synchronized with 01_experimental_setup/experimental_setup.md.
+
+gymnasium  # version TBD
+stable-baselines3  # version TBD
+torch  # version TBD
+numpy  # version TBD
+pandas  # version TBD
+matplotlib  # version TBD
+seaborn  # version TBD, if used for heatmaps
+pyyaml  # version TBD
