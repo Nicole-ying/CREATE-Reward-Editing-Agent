@@ -1,0 +1,209 @@
+\documentclass[10pt]{article}
+
+\usepackage[letterpaper,margin=0.82in]{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{url}
+\usepackage[hidelinks]{hyperref}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage{courier}
+\usepackage{float}
+
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{4pt}
+\setlist[itemize]{leftmargin=1.3em,itemsep=1pt,topsep=2pt}
+\setlist[enumerate]{leftmargin=1.5em,itemsep=1pt,topsep=2pt}
+\renewcommand{\arraystretch}{1.12}
+
+\newcommand{\method}{CREATE}
+\newcommand{\todo}{\textcolor{red}{TBD}}
+
+\title{Supplementary Material for\\
+\large CREATE: A Closed-Loop Reward Editing Agent with Training Evidence for Reinforcement Learning}
+\author{Anonymous Submission}
+\date{}
+
+\begin{document}
+\maketitle
+
+This appendix provides compact implementation and reproducibility details for the main paper. It focuses on experimental settings, ablation definitions, pseudocode, validation rules, result tables, and representative diagnostic cases. Prompt templates are intentionally reserved in this draft and should be inserted after the final anonymized prompt package is prepared.
+
+\appendix
+
+\section{Experimental Setup}
+
+\subsection{Environments and Evaluation Budgets}
+Table~\ref{tab:envs} summarizes the two Gymnasium environments used in the paper. The generated reward is used only for policy optimization; all reported fitness values are computed with the untouched environment-native reward.
+
+\begin{table}[H]
+\centering
+\caption{Environment and evaluation budgets.}
+\label{tab:envs}
+\begin{tabular}{lccc}
+\toprule
+Environment & Role & Training steps / candidate & Solving threshold \\
+\midrule
+LunarLander-v3 & Main benchmark and ablations & $10^6$ & 200 \\
+BipedalWalker-v3 & Secondary continuous-control validation & $5\times10^6$ & 300 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Policy Optimization and Evaluation}
+Each reward candidate trains a freshly initialized PPO policy implemented in Stable-Baselines3. Search fitness is the mean undiscounted native episodic return over 20 fixed evaluation episodes. After reward selection, test fitness is measured over 100 unseen evaluation episodes.
+
+\begin{table}[H]
+\centering
+\caption{Training and evaluation protocol. Exact package versions and PPO hyperparameters should be filled from experiment logs before final submission.}
+\label{tab:training}
+\begin{tabular}{ll}
+\toprule
+Item & Setting \\
+\midrule
+Policy optimizer & PPO \\
+RL implementation & Stable-Baselines3 \\
+Search fitness & 20 fixed native-evaluation episodes \\
+Test fitness & 100 unseen native-evaluation episodes \\
+Generated reward & Used for policy training only \\
+Native reward & Used for candidate selection and reporting \\
+LunarLander LLM backbone & DeepSeek V4 Pro \\
+Temperature / top-$p$ / max tokens & \todo{} \\
+Training seeds and evaluation seeds & \todo{} \\
+Software versions & \todo{} \\
+Hardware and runtime & \todo{} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Compared Conditions and Ablations}
+
+LunarLander-v3 experiments compare five conditions under a matched reward-evaluation budget. All conditions share the same task description, reward-code interface, code validation checks, PPO budget, and LLM backbone unless explicitly ablated.
+
+\begin{table}[H]
+\centering
+\caption{Condition matrix. ``Act./mag.'' denotes activation-rate and magnitude-share evidence.}
+\label{tab:conditions}
+\small
+\begin{tabular}{lccccc}
+\toprule
+Condition & Sequential & Memory & Evidence organizer & Act./mag. evidence & Bounded edit \\
+\midrule
+Independent-10 & No & No & No & No & No \\
+Stateless revision & Yes & No & No & No & No \\
+CREATE w/o evidence enrichment & Yes & Yes & Removed & No & Yes \\
+CREATE w/o hierarchical editing & Yes & Yes & Yes & Yes & Removed \\
+CREATE & Yes & Yes & Yes & Yes & Yes \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The ablations isolate two mechanisms. Removing evidence enrichment tests whether structured component evidence is necessary for diagnosis. Removing hierarchical semantic editing tests whether a single expensive retraining run remains interpretable when the editor is allowed to change multiple unrelated reward semantics at once.
+
+\section{CREATE Pseudocode}
+
+\subsection{Main Reward-Editing Loop}
+
+\begin{enumerate}
+    \item Generate and validate an initial reward program $R_0$ from the task description.
+    \item Initialize intervention memory $M_0$ and an empty best archive $B_0$.
+    \item For each reward-design round $t=0,\dots,K-1$:
+    \begin{enumerate}
+        \item Validate $R_t$ using syntax, interface, runtime, and finite-value checks.
+        \item Train policy $\pi_t$ using generated reward $R_t$ for budget $B$.
+        \item Evaluate $\pi_t$ using native environment reward to obtain $J_t$.
+        \item Log episode outcomes, termination modes, reward-component values, activation rates, magnitude shares, and temporal summaries.
+        \item Construct observation $O_t=\Phi_{\mathcal T}(\mathcal D_t,M_t,B_t)$ with the evidence organizer.
+        \item Update the best archive if $J_t$ exceeds the incumbent native fitness.
+        \item If the threshold is reached, return the archived best reward-policy pair.
+        \item Diagnose one principal semantic failure $q_t$, select edit level $\ell_t\in\{L1,L2,L3\}$, and produce edit $\Delta_t$.
+        \item Apply the edit to obtain $R_{t+1}=\mathcal U(R_t,\Delta_t)$.
+        \item Append the observation, diagnosis, edit, expected change, and later outcome to memory.
+    \end{enumerate}
+\end{enumerate}
+
+\subsection{Evidence Organizer}
+The evidence organizer summarizes training records but does not choose the reward edit. It reports native outcomes, component activation, component magnitude, termination patterns, temporal changes, and lineage comparisons. Its output should enable the editor to distinguish silent components, dominant proxy terms, weak dense signals, unreachable sparse bonuses, and regressions caused by the most recent intervention.
+
+\subsection{Bounded Reward Editor}
+The editor commits to one principal semantic target in an ordinary revision. L1 edits tune coefficients, thresholds, or gates. L2 edits add, remove, or refactor components while preserving the intended semantic. L3 redesign is reserved for repeated local failure. This bounded action space makes the next policy-training run interpretable as a focused intervention test rather than an uncontrolled multicomponent rewrite.
+
+\section{Reward Interface and Validation Rules}
+
+A valid generated reward program must return a finite scalar reward and named component values. The exact function signature is implementation-specific and should be inserted from the released code. The validation stage should include:
+
+\begin{itemize}
+    \item syntax parsing and import checks;
+    \item interface compatibility with the environment wrapper;
+    \item execution on sampled transitions;
+    \item finite scalar reward check;
+    \item named component dictionary check;
+    \item rejection of invalid code before PPO training budget is consumed.
+\end{itemize}
+
+Named components are required because CREATE relies on component-level evidence. For each component, the logs should include its expression or code location, episode sum, activation rate, magnitude share, dominance rank, and observed relation to native-task outcomes.
+
+\section{Full Results}
+
+\subsection{LunarLander-v3 Aggregate Results}
+\begin{table}[H]
+\centering
+\caption{LunarLander-v3 reward search over five lineages. Values are mean $\pm$ sample standard deviation of lineage-wise best search fitness.}
+\label{tab:lander}
+\begin{tabular}{lccc}
+\toprule
+Condition & Budget & Best fitness & Solved \\
+\midrule
+Independent-10 & 10 & $-0.74\pm114.40$ & $0/5$ \\
+Stateless revision & 10 & $44.0\pm65.9$ & $0/5$ \\
+CREATE w/o evidence enrichment & 10 & $134.97\pm148.43$ & $2/5$ \\
+CREATE w/o hierarchical editing & 10 & $114.21\pm46.31$ & $0/5$ \\
+CREATE & 10 & $228.98\pm16.54$ & $5/5$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+CREATE solves the five LunarLander lineages at rounds $8,10,2,4,$ and $3$, respectively. The selected policies obtain $231.63\pm12.23$ test fitness.
+
+\subsection{BipedalWalker-v3 Results}
+\begin{table}[H]
+\centering
+\caption{BipedalWalker-v3 results for complete CREATE only.}
+\label{tab:bipedal}
+\begin{tabular}{lccc}
+\toprule
+Seed & Initial fitness & First version $\geq300$ & Best fitness \\
+\midrule
+0 & 270.7 & $v_2$ & 320.0 \\
+1 & 280.5 & $v_2$ & 313.7 \\
+2 & 272.1 & $v_2$ & 307.9 \\
+3 & 290.0 & $v_2$ & 311.1 \\
+4 & 103.0 & $v_3$ & 304.9 \\
+\midrule
+Mean & $243.26\pm70.45$ & 2.2 versions & $311.54\pm5.17$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Per-round LunarLander and BipedalWalker traces should be inserted after raw experiment logs are finalized. At minimum, the final appendix should include seed, condition, round, reward version, native search fitness, best-so-far fitness, solved status, episode length, termination summary, and selected test fitness.
+
+\section{Prompt Templates}
+Prompt templates are reserved for the final anonymized supplement. This draft intentionally does not include prompt text. The final version should include the reward initialization prompt, evidence organizer prompt, reward editing prompt, coding instruction prompt, and the prompt differences used by each ablation condition.
+
+\section{Component-Level Evidence and Case Studies}
+
+\subsection{Evidence Tables and Heatmaps}
+The final supplement should include activation-rate and magnitude-share heatmaps for the representative LunarLander lineages discussed in the main paper. Each table should report component name, intended behavior, activation rate, episode-sum mean, magnitude share, dominance rank, diagnosis, and edit decision.
+
+\subsection{Seed 0: Collapse and Recovery}
+Rounds 1--6 explore coefficient scaling, sparse-to-dense conversion, and mathematical-form changes without solving the task. Round 7 replaces a state-based proximity signal with differential progress shaping and collapses to approximately $-389$. The evidence organizer identifies that the new signal is near zero when stationary and becomes negative under disturbance, penalizing stability. The editor applies an L2 repair in round 8 by restoring a state-based formulation with an altitude factor, raising fitness above the threshold.
+
+\subsection{Seed 3: Progressive Convergence}
+Seed 3 improves from approximately $-20$ to 148 after replacing an absolute-distance penalty with potential-difference approach shaping. A later restrictive contact adjustment causes regression. Cross-round memory localizes the regression to the most recent contact-semantic change. The next L2 edit reconstructs the contact semantic as a reachable gradient from single-leg contact toward simultaneous stable contact, reaching 254.
+
+\section{Final Checklist}
+Before submission, fill exact versions, PPO hyperparameters, LLM settings, seeds, per-round traces, component evidence, reward examples, and anonymized prompts. Remove author-identifying URLs.
+
+\end{document}
