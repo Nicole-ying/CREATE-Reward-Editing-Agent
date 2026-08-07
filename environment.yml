@@ -1,0 +1,15 @@
+name: create-reward-editing-agent
+channels:
+  - conda-forge
+  - pytorch
+dependencies:
+  - python=TBD
+  - pip
+  - numpy
+  - pandas
+  - matplotlib
+  - pyyaml
+  - pip:
+      - gymnasium==TBD
+      - stable-baselines3==TBD
+      - torch==TBD
