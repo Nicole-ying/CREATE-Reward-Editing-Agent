@@ -1,0 +1,25 @@
+environment: LunarLander-v3
+role: primary benchmark
+optimizer: PPO
+implementation: Stable-Baselines3
+training_steps_per_candidate: 1000000
+search_evaluation_episodes: 20
+test_evaluation_episodes: 100
+native_solved_threshold: 200
+reward_used_for_training: generated_reward
+metric_used_for_selection: native_environment_return
+
+# Fill these from the exact experiment configuration before submission.
+policy: TBD
+learning_rate: TBD
+n_steps: TBD
+batch_size: TBD
+n_epochs: TBD
+gamma: TBD
+gae_lambda: TBD
+clip_range: TBD
+ent_coef: TBD
+vf_coef: TBD
+max_grad_norm: TBD
+policy_network: TBD
+seed_list: TBD
